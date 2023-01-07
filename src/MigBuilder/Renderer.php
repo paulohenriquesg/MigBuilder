@@ -40,6 +40,8 @@ class Renderer
         $code = "";
         $indexCode = "";
         $constraintsCode = "";
+        $extraDbQueriesCode = "";
+
         $code .= self::migration_001_class_start($table);
         $code .= self::migration_002_up_start($table);
         foreach($columns as $column){
@@ -50,6 +52,7 @@ class Renderer
             $code .= $totalCode['code'];
             $indexCode .= $totalCode['indexCode'];
             $constraintsCode .= $totalCode['constraintsCode'];
+            $extraDbQueriesCode .= $totalCode['extraDbQueriesCode'];
         }
         if($timestamps == true){
             $code .= "            \$table->timestamps();"."\r\n";
@@ -61,6 +64,9 @@ class Renderer
         $code .= "            // Constraints & Foreign Keys\r\n";
         $code .= $constraintsCode;
 
+        $code .= self::migration_003_up_create_end($table);
+        $code .= "        // Extra DB code\r\n";
+        $code .= str_replace('{{TABLE}}',$table,$extraDbQueriesCode);
         $code .= self::migration_003_up_end($table);
         $code .= self::migration_004_down($table);
         $code .= self::migration_005_class_end();
@@ -78,7 +84,6 @@ class Renderer
                 $code .= "    public \$incrementing = false;\r\n\r\n";
             }
         }
-
 
         // Timestamps
         if ($timestamps === false) {
@@ -178,6 +183,7 @@ class Renderer
         }
         $indexCode = "";
         $constraintsCode = "";
+        $extraDbQueriesCode = "";
 
         $code = "            \$table->";
         $code .= $columnType."('$column->name'";
@@ -215,7 +221,14 @@ class Renderer
             $constraintsCode .= "            \$table->foreign('$column->name')->references('{$column->fk->ref_column}')->on('{$column->fk->ref_table}')";
             $constraintsCode .= ";\r\n";
         }
-        return ['code'=>$code, 'indexCode'=>$indexCode, 'constraintsCode'=>$constraintsCode];
+
+        if ($column->column_key == "UNI") {
+            if ($column->extra === 'auto_increment'){
+                $extraDbQueriesCode .= "        \Illuminate\Support\Facades\DB::statement('ALTER TABLE {{TABLE}} MODIFY $column->name $columnType NOT NULL AUTO_INCREMENT;');";
+                $extraDbQueriesCode .= "\r\n";
+            }
+        }
+        return ['code'=>$code, 'indexCode'=>$indexCode, 'constraintsCode'=>$constraintsCode, 'extraDbQueriesCode'=>$extraDbQueriesCode];
     }
 
     /***********************************************************************************
@@ -249,8 +262,14 @@ class Create".Util::firstUpper($table)."Table extends Migration
         Schema::create('$table', function (Blueprint \$table) {
 ";
     }
-    private static function migration_003_up_end($table){
+    private static function migration_003_up_create_end($table)
+    {
         return "        });
+
+";
+    }
+    private static function migration_003_up_end($table){
+        return "
     }
 ";
     }
