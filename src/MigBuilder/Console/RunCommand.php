@@ -28,7 +28,6 @@ class RunCommand extends Command
      */
     public function handle()
     {
-
         $b = new Builder($this, $this->argument('connection'));
         $this->line("Migbuilder starting...");
         $b->buildDatabase($this->option('timestamps'), $this->option('overwrite'));

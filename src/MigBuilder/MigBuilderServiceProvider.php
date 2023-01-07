@@ -24,7 +24,7 @@ class MigBuilderServiceProvider extends ServiceProvider implements DeferrablePro
      */
     public function boot()
     {
-        if (! $this->app->runningInConsole()) {
+        if (!$this->app->runningInConsole()) {
             return;
         }
 
