@@ -29,6 +29,11 @@ class Renderer
         'longtext'   => 'longText',
     ];
 
+    private static array $relationshipReturnTypes = [
+        'belongsTo' => ': \Illuminate\Database\Eloquent\Relations\BelongsTo',
+        'hasMany'   => ': \Illuminate\Database\Eloquent\Relations\HasMany',
+    ];
+
     private static array $fields = [];
 
     public static function migration($table, $columns, $constraints, $timestamps = true): string
@@ -466,13 +471,15 @@ class " . Util::firstUpper($table) . "Seeder extends Seeder
         self::$fields[] = $modelName;
 
         if ($foreignKey !== '') {
-            return "    public function $methodName(){
+            return "    public function $methodName()" . self::$relationshipReturnTypes[$relationship] . "
+    {
         return \$this->$relationship($modelName::class, '$foreignKey');
     }
 ";
         }
 
-        return "    public function $methodName(){
+        return "    public function $methodName()" . self::$relationshipReturnTypes[$relationship] . "
+    {
         return \$this->$relationship($modelName::class);
     }
 ";
