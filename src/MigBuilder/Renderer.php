@@ -1,8 +1,4 @@
 <?php
-/**
- * Date: 20/12/2021
- * Time: 15:11
- */
 
 namespace MigBuilder;
 
