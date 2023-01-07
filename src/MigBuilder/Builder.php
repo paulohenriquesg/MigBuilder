@@ -3,25 +3,28 @@
 namespace MigBuilder;
 
 
+use Illuminate\Console\Command;
+use function Termwind\terminal;
+
 class Builder
 {
-    /**
-     * @var Explorer;
-     */
     private $explorer = null;
+    private Command $command;
 
-    public function __construct($connection = null)
+    public function __construct(Command $command, $connection = null)
     {
-
         $this->explorer = new Explorer($connection);
+        $this->command = $command;
     }
 
     public function buildDatabase($timestamps = true, $overwrite = false)
     {
-
         $tables = $this->explorer->listSortedTables();
         $index = 0;
         foreach ($tables as $table) {
+            $dots = max(terminal()->width() - mb_strlen($table) - 8, 0);
+            $this->command->line($table . ' ' . str_repeat('<fg=gray>.</>', $dots) . ' <fg=green;options=bold>DONE</>');
+
             $index++;
             $this->buildAll($table, $index, $timestamps, $overwrite);
         }
