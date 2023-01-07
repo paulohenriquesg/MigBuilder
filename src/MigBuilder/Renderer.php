@@ -160,7 +160,7 @@ class Renderer
                 $default = "'".$default."'";
             }
         }
-        if($column->column_key == "PRI" || $column->column_key == "UNI"){
+        if($column->column_key == "PRI"){
             if ($column->extra === 'auto_increment'){
                 $columnType = ($column->data_type === 'int') ? "increments" : "id";
             } else {
@@ -202,6 +202,12 @@ class Renderer
         }
         $code .= ";\r\n";
         if($isReferred == true && $column->column_key !== "PRI"){
+            $indexCode .= "            \$table->index('$column->name')";
+            $indexCode .= ";\r\n";
+        }elseif($column->column_key === "PRI" && $columnType === 'uuid'){
+            $indexCode .= "            \$table->primary('$column->name')";
+            $indexCode .= ";\r\n";
+        }elseif($column->column_key === "MUL" || $column->column_key == "UNI"){
             $indexCode .= "            \$table->index('$column->name')";
             $indexCode .= ";\r\n";
         }
