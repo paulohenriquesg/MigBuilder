@@ -6,11 +6,11 @@ use Illuminate\Support\Str;
 
 class Util
 {
-    public static function firstUpper($name, $evenFirstOne = true)
+    public static function firstUpper($name, $evenFirstOne = true): string
     {
         $name = (stripos($name, '_') === false) ? Str::snake($name) : $name;
 
-        $processedName = Str::of($name)->camel();
+        $processedName = Str::of($name)->camel()->toString();
 
         if ($evenFirstOne === false) {
             return $processedName;

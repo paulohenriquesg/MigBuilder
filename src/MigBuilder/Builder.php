@@ -7,16 +7,16 @@ use function Termwind\terminal;
 
 class Builder
 {
-    private $explorer = null;
+    private ?Explorer $explorer;
     private Command $command;
 
-    public function __construct(Command $command, $connection = null)
+    public function __construct(Command $command, ?string $connection = null)
     {
         $this->explorer = new Explorer($connection);
         $this->command = $command;
     }
 
-    public function buildDatabase($timestamps = true, $overwrite = false)
+    public function buildDatabase($timestamps = true, $overwrite = false): void
     {
         $tables = $this->explorer->listSortedTables();
         $index = 0;
@@ -29,26 +29,26 @@ class Builder
         }
     }
 
-    private function buildAll($table, $index, $timestamps = true, $overwrite = false)
+    private function buildAll($table, $index, $timestamps = true, $overwrite = false): void
     {
-        $modelFile = app_path() . '/Models/' . self::modelFileName($table);
-        $factoryFile = database_path() . '/factories/' . self::factoryFileName($table);
-        $seederFile = database_path() . '/seeders/' . self::seederFileName($table);
+        $modelFile = app_path() . '/Models/' . $this->modelFileName($table);
+        $factoryFile = database_path() . '/factories/' . $this->factoryFileName($table);
+        $seederFile = database_path() . '/seeders/' . $this->seederFileName($table);
         $migrationFileName = $this->getExistingMigrationFileName($table);
         $migrationFile = database_path() . '/migrations/' . $migrationFileName;
-        if ($overwrite == false && (
+        if ($overwrite === false && (
                 file_exists($modelFile) ||
                 file_exists($factoryFile) ||
                 file_exists($seederFile) ||
                 ($migrationFileName !== false && file_exists($migrationFile))
             )) {
             die("One of the files to be generated exists and overwrite option was not specified.");
-        } else {
-            @unlink($modelFile);
-            @unlink($factoryFile);
-            @unlink($seederFile);
-            @unlink($migrationFile);
         }
+
+        @unlink($modelFile);
+        @unlink($factoryFile);
+        @unlink($seederFile);
+        @unlink($migrationFile);
 
         $this->buildModel($table, $timestamps);
         $this->buildFactory($table);
@@ -56,7 +56,7 @@ class Builder
         $this->buildMigration($table, $index, $timestamps);
     }
 
-    private function buildModel($table, $timestamps)
+    private function buildModel($table, $timestamps): void
     {
         $columns = $this->explorer->listColumns($table);
         $constraints = $this->explorer->listConstraints($table);
@@ -68,50 +68,50 @@ class Builder
             }
         }
         $code = Renderer::model($table, $columns, $constraints, $children, $timestamps);
-        file_put_contents(app_path() . '/Models/' . self::modelFileName($table), $code);
+        file_put_contents(app_path() . '/Models/' . $this->modelFileName($table), $code);
     }
 
-    private function buildFactory($table)
+    private function buildFactory($table): void
     {
         $columns = $this->explorer->listColumns($table);
         $constraints = $this->explorer->listConstraints($table);
         $code = Renderer::factory($table, $columns, $constraints);
-        file_put_contents(database_path() . '/factories/' . self::factoryFileName($table), $code);
+        file_put_contents(database_path() . '/factories/' . $this->factoryFileName($table), $code);
     }
 
-    private function buildSeeder($table)
+    private function buildSeeder($table): void
     {
         $columns = $this->explorer->listColumns($table);
         $code = Renderer::seeder($table, $columns);
-        file_put_contents(database_path() . '/seeders/' . self::seederFileName($table), $code);
+        file_put_contents(database_path() . '/seeders/' . $this->seederFileName($table), $code);
     }
 
-    private function buildMigration($table, $index, $timestamps = true)
+    private function buildMigration($table, $index, $timestamps = true): void
     {
         $columns = $this->explorer->listColumns($table);
         $constraints = $this->explorer->listConstraints($table);
         $code = Renderer::migration($table, $columns, $constraints, $timestamps);
-        file_put_contents(database_path() . '/migrations/' . self::migrationFileName($table, $index), $code);
+        file_put_contents(database_path() . '/migrations/' . $this->migrationFileName($table, $index), $code);
     }
 
-    private function modelFileName($table)
+    private function modelFileName($table): string
     {
         return Util::firstUpper($table) . ".php";
     }
 
-    private function factoryFileName($table)
+    private function factoryFileName($table): string
     {
         return Util::firstUpper($table) . "Factory.php";
     }
 
-    private function seederFileName($table)
+    private function seederFileName($table): string
     {
         return Util::firstUpper($table) . "Seeder.php";
     }
 
-    private function migrationFileName($table, $index = null)
+    private function migrationFileName($table, $index = null): string
     {
-        if ($index == null) {
+        if ($index === null) {
             $idx = date("His");
         } else {
             $idx = substr("000000" . $index, -6);

@@ -2,22 +2,20 @@
 
 namespace MigBuilder;
 
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
 class Explorer
 {
-    /**
-     * @var \Illuminate\Database\ConnectionInterface
-     */
-    private $cdb = null;
-    private $db = null;
-    public $tables = [];
-    public $sortedTables = [];
+    private ConnectionInterface $cdb;
+    private string $db;
+    public array $tables = [];
+    public array $sortedTables = [];
 
-    public function __construct($conName = null)
+    public function __construct(string $conName = null)
     {
-        if ($conName == null) {
+        if ($conName === null) {
             $conName = Config::get('database.default');
         }
         $connections = Config::get('database.connections');
@@ -34,12 +32,12 @@ class Explorer
 
     }
 
-    public function listTables()
+    public function listTables(): array
     {
         return $this->tables;
     }
 
-    public function listSortedTables()
+    public function listSortedTables(): array
     {
         return $this->sortedTables;
     }
@@ -109,7 +107,7 @@ class Explorer
         return $cons;
     }
 
-    private function readTables()
+    private function readTables(): void
     {
         $sql = "select TABLE_NAME from information_schema.TABLES where TABLE_SCHEMA = ?";
         $tables = $this->select($sql, [$this->db]);
@@ -133,24 +131,24 @@ class Explorer
         }
     }
 
-    private function sortTables()
+    private function sortTables(): void
     {
         $sorted = [];
         $tables = $this->tables;
-        while (sizeof($tables)) {
-            $st = sizeof($tables);
+        while (count($tables)) {
+            $st = count($tables);
             foreach ($tables as $table => $data) {
                 foreach ($sorted as $s) {
                     if (isset($tables[$table]['dependencies'][$s])) {
                         unset($tables[$table]['dependencies'][$s]);
                     }
                 }
-                if (sizeof($tables[$table]['dependencies']) == 0) {
+                if (count($tables[$table]['dependencies']) === 0) {
                     $sorted[$table] = $table;
                     unset($tables[$table]);
                 }
             }
-            if (sizeof($tables) == $st) {
+            if (count($tables) === $st) {
                 echo "Fatal error: some not existing table is being referenced by another.";
                 var_dump($tables);
                 die();
@@ -159,9 +157,8 @@ class Explorer
         $this->sortedTables = $sorted;
     }
 
-    private function select($sql, $params = [])
+    private function select($sql, $params = []): array
     {
-        $res = $this->cdb->select($sql, $params);
-        return $res;
+        return $this->cdb->select($sql, $params);
     }
 }

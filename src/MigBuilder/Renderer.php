@@ -4,7 +4,7 @@ namespace MigBuilder;
 
 class Renderer
 {
-    private static $columnTypes = [
+    private static array $columnTypes = [
         'bigint'     => 'bigInteger',
         'binary'     => 'binary',
         'tinyint'    => 'boolean',
@@ -29,7 +29,7 @@ class Renderer
         'longtext'   => 'longText',
     ];
 
-    public static function migration($table, $columns, $constraints, $timestamps = true)
+    public static function migration($table, $columns, $constraints, $timestamps = true): string
     {
         $code = "";
         $indexCode = "";
@@ -48,7 +48,7 @@ class Renderer
             $constraintsCode .= $totalCode['constraintsCode'];
             $extraDbQueriesCode .= $totalCode['extraDbQueriesCode'];
         }
-        if ($timestamps == true) {
+        if ($timestamps === true) {
             $code .= "            \$table->timestamps();" . "\r\n";
         }
         $code .= "\r\n";
@@ -67,10 +67,9 @@ class Renderer
         return $code;
     }
 
-    public static function model($table, $columns, $constraints, $children, $timestamps)
+    public static function model($table, $columns, $constraints, $children, $timestamps): string
     {
-        $code = "";
-        $code .= self::model_001_class_start($table);
+        $code = self::model_001_class_start($table);
 
         // UUID
         foreach ($columns as $column) {
@@ -92,7 +91,7 @@ class Renderer
         foreach ($columns as $column) {
             $idx++;
             $code .= "'$column->name', ";
-            if ($idx % 8 == 0 && $idx < sizeof($columns)) {
+            if ($idx % 8 === 0 && $idx < count($columns)) {
                 $code .= "\r\n                           ";
             }
         }
@@ -114,10 +113,9 @@ class Renderer
         return $code;
     }
 
-    public static function factory($table, $columns, $constraints)
+    public static function factory($table, $columns, $constraints): string
     {
-        $code = "";
-        $code .= self::factory_001_start($table);
+        $code = self::factory_001_start($table);
         $code .= "        // Record sample structure\r\n";
         $code .= "        return [\r\n";
         foreach ($columns as $column) {
@@ -162,10 +160,9 @@ class Renderer
         return $code;
     }
 
-    public static function seeder($table, $columns)
+    public static function seeder($table, $columns): string
     {
-        $code = "";
-        $code .= self::seeder_001_start($table);
+        $code = self::seeder_001_start($table);
         $code .= "    // Record sample structure\r\n";
         $code .= "    \$" . Util::firstUpper($table, false) . " = [\r\n";
         foreach ($columns as $column) {
@@ -185,38 +182,34 @@ class Renderer
     /***********************************************************************************
      *                                  UTILITIES
      **********************************************************************************/
-    private static function columnCode($column)
+    private static function columnCode($column): array
     {
-        $columnType = null;
         $precision = null;
         $scale = null;
         $length = null;
-        $nullable = null;
+        $nullable = $column->nullable === 'YES';
         $default = $column->default;
         $isReferred = $column->isReferred;
         $columnType = self::$columnTypes[$column->data_type];
-        if ($columnType == "decimal") {
+        if ($columnType === "decimal") {
             $precision = $column->num_precision;
             $scale = $column->num_scale;
         }
-        $nullable = $column->nullable == 'YES' ? true : false;
         if (in_array($column->data_type, ['varchar', 'char'])) {
             $length = $column->max_length;
             if ($default !== null) {
                 $default = "'" . $default . "'";
             }
         }
-        if ($column->column_key == "PRI") {
+        if ($column->column_key === "PRI") {
             if ($column->extra === 'auto_increment') {
                 $columnType = ($column->data_type === 'int') ? "increments" : "id";
             } else {
                 $columnType = ($column->data_type === 'int') ? "unsignedInteger" : "unsignedBigInteger";
             }
         }
-        if (isset($column->fk)) {
-            if ($column->fk->ref_column === "id") {
-                $columnType = ($column->data_type === 'int') ? "unsignedInteger" : "unsignedBigInteger";
-            }
+        if (isset($column->fk) && $column->fk->ref_column === "id") {
+            $columnType = ($column->data_type === 'int') ? "unsignedInteger" : "unsignedBigInteger";
         }
         if ($length === 32 && $column->data_type === 'char') {
             $length = null;
@@ -228,14 +221,15 @@ class Renderer
 
         $code = "            \$table->";
         $code .= $columnType . "('$column->name'";
-        if ($length != null) {
+        if ($length !== null) {
             $code .= ", $length";
         }
-        if ($columnType == "decimal") {
+        if ($columnType === "decimal") {
             $code .= ", $precision";
             $code .= ", $scale";
         }
         $code .= ")";
+
         if ($nullable) {
             $code .= "->nullable()";
         }
@@ -248,13 +242,13 @@ class Renderer
             }
         }
         $code .= ";\r\n";
-        if ($isReferred == true && $column->column_key !== "PRI") {
+        if ($isReferred === true && $column->column_key !== "PRI") {
             $indexCode .= "            \$table->index('$column->name')";
             $indexCode .= ";\r\n";
         } elseif ($column->column_key === "PRI" && in_array($columnType, ['unsignedInteger', 'unsignedBigInteger', 'uuid'])) {
             $indexCode .= "            \$table->primary('$column->name')";
             $indexCode .= ";\r\n";
-        } elseif ($column->column_key === "MUL" || $column->column_key == "UNI") {
+        } elseif ($column->column_key === "MUL" || $column->column_key === "UNI") {
             $indexCode .= "            \$table->index('$column->name')";
             $indexCode .= ";\r\n";
         }
@@ -263,7 +257,7 @@ class Renderer
             $constraintsCode .= ";\r\n";
         }
 
-        if ($column->column_key == "UNI") {
+        if ($column->column_key === "UNI") {
             if ($column->extra === 'auto_increment') {
                 $extraDbQueriesCode .= "        \Illuminate\Support\Facades\DB::statement('ALTER TABLE {{TABLE}} MODIFY $column->name $columnType NOT NULL AUTO_INCREMENT;');";
                 $extraDbQueriesCode .= "\r\n";
@@ -278,7 +272,7 @@ class Renderer
     /******************************************************************
      * MIGRATION
      */
-    private static function migration_001_class_start($table)
+    private static function migration_001_class_start($table): string
     {
         return "
 <?php
@@ -293,7 +287,7 @@ class Create" . Util::firstUpper($table) . "Table extends Migration
         ";
     }
 
-    private static function migration_002_up_start($table)
+    private static function migration_002_up_start($table): string
     {
         return "
     /**
@@ -307,21 +301,21 @@ class Create" . Util::firstUpper($table) . "Table extends Migration
 ";
     }
 
-    private static function migration_003_up_create_end($table)
+    private static function migration_003_up_create_end($table): string
     {
         return "        });
 
 ";
     }
 
-    private static function migration_003_up_end($table)
+    private static function migration_003_up_end($table): string
     {
         return "
     }
 ";
     }
 
-    private static function migration_004_down($table)
+    private static function migration_004_down($table): string
     {
         return "
     /**
@@ -338,7 +332,7 @@ class Create" . Util::firstUpper($table) . "Table extends Migration
 ";
     }
 
-    private static function migration_005_class_end()
+    private static function migration_005_class_end(): string
     {
         return "
 }
@@ -348,7 +342,7 @@ class Create" . Util::firstUpper($table) . "Table extends Migration
     /******************************************************************
      * MODEL
      */
-    private static function model_001_class_start($table)
+    private static function model_001_class_start($table): string
     {
         return "<?php
 /* Generated automatically using MigBuilder by Pangodream */
@@ -366,7 +360,7 @@ class " . Util::firstUpper($table) . " extends Model
 ";
     }
 
-    private static function model_002_class_end()
+    private static function model_002_class_end(): string
     {
         return "
 }
@@ -376,7 +370,7 @@ class " . Util::firstUpper($table) . " extends Model
     /******************************************************************
      * FACTORY
      */
-    private static function factory_001_start($table)
+    private static function factory_001_start($table): string
     {
         return "<?php
 /* Generated automatically using MigBuilder by Pangodream */
@@ -399,7 +393,7 @@ class " . Util::firstUpper($table) . "Factory extends Factory
 ";
     }
 
-    private static function factory_002_end()
+    private static function factory_002_end(): string
     {
         return "
     }
@@ -409,7 +403,7 @@ class " . Util::firstUpper($table) . "Factory extends Factory
     /******************************************************************
      * SEEDER
      */
-    private static function seeder_001_start($table)
+    private static function seeder_001_start($table): string
     {
         return "<?php
 /* Generated automatically using MigBuilder by Pangodream */
@@ -431,7 +425,7 @@ class " . Util::firstUpper($table) . "Seeder extends Seeder
 ";
     }
 
-    private static function seeder_002_end()
+    private static function seeder_002_end(): string
     {
         return "
     }
@@ -441,7 +435,7 @@ class " . Util::firstUpper($table) . "Seeder extends Seeder
     /*********************************************************************
      * MODEL Relationship
      */
-    private static function modelRelationship($modelName, $relationship, $foreignKey = '')
+    private static function modelRelationship($modelName, $relationship, $foreignKey = ''): string
     {
         if ($foreignKey !== '') {
             return "    public function $modelName(){
