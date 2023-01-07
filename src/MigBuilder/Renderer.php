@@ -81,7 +81,7 @@ class Renderer
 
         // Timestamps
         if ($timestamps === false) {
-            $code .= "    public \$timestamps = false;\r\n";
+            $code .= "    public \$timestamps = false;\r\n\r\n";
         }
 
         //Fillable
@@ -97,6 +97,23 @@ class Renderer
         }
         $code .= "];\r\n";
         $code .= "\r\n";
+
+        //Castings
+        $code .= "    // Castings (remove the columns you don't need)\r\n";
+        $code .= "    protected \$casts = [";
+        foreach ($columns as $column) {
+            if ($column->data_type === 'datetime') {
+                $code .= "\r\n        '$column->name' => 'datetime', ";
+            } elseif ($column->data_type === 'date') {
+                $code .= "\r\n        '$column->name' => 'date', ";
+            } elseif ($column->data_type === 'tinyint' && $column->column_type === 'tinyint(1)') {
+                $code .= "\r\n        '$column->name' => 'boolean', ";
+            } else {
+            }
+        }
+        $code .= "\r\n    ];\r\n";
+        $code .= "\r\n";
+
         //Relationships
         $code .= "    // Parent relationships (change belongsTo to belongsToMany or similar if needed)\r\n";
         foreach ($columns as $column) {
@@ -104,6 +121,7 @@ class Renderer
                 $code .= self::modelRelationship(Util::firstUpper($constraints[$column->name]->ref_table), "belongsTo", $constraints[$column->name]->column_name);
             }
         }
+        $code .= "\r\n";
         $code .= "    // Child relationships (change hasMany to hasOne or similar if needed)\r\n";
         foreach ($children as $child) {
             $code .= self::modelRelationship(Util::firstUpper($child), "hasMany");
