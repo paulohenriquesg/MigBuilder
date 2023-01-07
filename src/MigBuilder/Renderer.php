@@ -201,7 +201,7 @@ class Renderer
             }
         }
         $code .= ";\r\n";
-        if($isReferred == true){
+        if($isReferred == true && $column->column_key !== "PRI"){
             $indexCode .= "            \$table->index('$column->name')";
             $indexCode .= ";\r\n";
         }
