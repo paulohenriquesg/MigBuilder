@@ -160,7 +160,7 @@ class Renderer
                 $default = "'".$default."'";
             }
         }
-        if($column->column_key == "PRI"){
+        if($column->column_key == "PRI" || $column->column_key == "UNI"){
             if ($column->extra === 'auto_increment'){
                 $columnType = ($column->data_type === 'int') ? "increments" : "id";
             } else {
