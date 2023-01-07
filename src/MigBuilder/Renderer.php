@@ -204,7 +204,7 @@ class Renderer
         if($isReferred == true && $column->column_key !== "PRI"){
             $indexCode .= "            \$table->index('$column->name')";
             $indexCode .= ";\r\n";
-        }elseif($column->column_key === "PRI" && $columnType === 'uuid'){
+        }elseif($column->column_key === "PRI" && in_array($columnType,['unsignedInteger','unsignedBigInteger','uuid'])){
             $indexCode .= "            \$table->primary('$column->name')";
             $indexCode .= ";\r\n";
         }elseif($column->column_key === "MUL" || $column->column_key == "UNI"){
