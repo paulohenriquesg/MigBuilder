@@ -67,7 +67,7 @@ class Renderer
         return $code;
     }
 
-    public static function model($table, $columns, $constraints, $children){
+    public static function model($table, $columns, $constraints, $children, $timestamps){
         $code = "";
         $code .= self::model_001_class_start($table);
 
@@ -77,6 +77,12 @@ class Renderer
                 $code .= "    protected \$keyType = 'string';\r\n";
                 $code .= "    public \$incrementing = false;\r\n\r\n";
             }
+        }
+
+
+        // Timestamps
+        if ($timestamps === false) {
+            $code .= "    public \$timestamps = false;\r\n";
         }
 
         //Fillable
