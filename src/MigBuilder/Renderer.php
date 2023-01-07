@@ -357,7 +357,7 @@ class ".Util::firstUpper($table)."Seeder extends Seeder
     /*********************************************************************
      * MODEL Relationship
      */
-    private static function modelRelationship($modelName, $relationship), $foreignKey = ''){
+    private static function modelRelationship($modelName, $relationship, $foreignKey = ''){
         if ($foreignKey !== '') {
             return "    public function $modelName(){
         return \$this->$relationship($modelName::class, '$foreignKey');
