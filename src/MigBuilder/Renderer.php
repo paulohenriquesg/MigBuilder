@@ -29,8 +29,11 @@ class Renderer
         'longtext'   => 'longText',
     ];
 
+    private static array $fields = [];
+
     public static function migration($table, $columns, $constraints, $timestamps = true): string
     {
+        self::$fields = [];
         $code = "";
         $indexCode = "";
         $constraintsCode = "";
@@ -455,13 +458,21 @@ class " . Util::firstUpper($table) . "Seeder extends Seeder
      */
     private static function modelRelationship($modelName, $relationship, $foreignKey = ''): string
     {
+        $methodName = $modelName;
+        if (in_array($modelName, self::$fields, true) === true) {
+            $methodName .= 'By' . Util::firstUpper($foreignKey);
+        }
+
+        self::$fields[] = $modelName;
+
         if ($foreignKey !== '') {
-            return "    public function $modelName(){
+            return "    public function $methodName(){
         return \$this->$relationship($modelName::class, '$foreignKey');
     }
 ";
         }
-        return "    public function $modelName(){
+
+        return "    public function $methodName(){
         return \$this->$relationship($modelName::class);
     }
 ";
