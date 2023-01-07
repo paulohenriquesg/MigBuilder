@@ -71,11 +71,11 @@ class Builder
         $code = Renderer::model($table, $columns, $constraints, $children, $timestamps);
         file_put_contents(app_path() . '/Models/' . self::modelFileName($table), $code);
     }
-
-    private function buildFactory($table)
-    {
-        $code = Renderer::factory($table);
-        file_put_contents(database_path() . '/factories/' . self::factoryFileName($table), $code);
+    private function buildFactory($table){
+        $columns = $this->explorer->listColumns($table);
+        $constraints = $this->explorer->listConstraints($table);
+        $code = Renderer::factory($table, $columns, $constraints);
+        file_put_contents(database_path().'/factories/'.self::factoryFileName($table), $code);
     }
 
     private function buildSeeder($table)

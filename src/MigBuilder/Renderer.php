@@ -114,9 +114,50 @@ class Renderer
         $code .= self::model_002_class_end();
         return $code;
     }
-    public static function factory($table){
+    public static function factory($table, $columns, $constraints){
         $code = "";
-        $code .= self::factory_001($table);
+        $code .= self::factory_001_start($table);
+        $code .= "        // Record sample structure\r\n";
+        $code .= "        return [\r\n";
+        foreach($columns as $column){
+            if ($column->extra === 'auto_increment') {
+                // continue;
+            }
+            $code .= "            //'$column->name' => ";
+            if(isset($constraints[$column->name])){
+                $code .= '\App\Models\\'.Util::firstUpper($constraints[$column->name]->ref_table)."::factory(),\r\n";
+            }elseif($column->data_type === 'char' && $column->max_length === 32){
+                $code .= "fake()->uuid(),\r\n";
+            }elseif(in_array($column->data_type,['int','tinyint','mediumint','bigint','smallint'])){
+                $code .= "0,\r\n";
+            }elseif($column->data_type === 'float'){
+                $code .= "fake()->randomFloat(2),\r\n";
+            }elseif($column->data_type === 'decimal'){
+                $code .= "fake()->randomNumber(5, false),\r\n";
+            }elseif($column->data_type === 'date'){
+                $code .= "fake()->date(),\r\n";
+            }elseif($column->data_type === 'datetime'){
+                $code .= "fake()->dateTime(),\r\n";
+            }elseif($column->data_type === 'time'){
+                $code .= "fake()->time(),\r\n";
+            }elseif($column->data_type === 'char') {
+                if ($column->max_length === 1) {
+                    $code .= "(string)fake()->numberBetween(0,1),\r\n";
+                } else{
+                    $code .= "fake()->randomLetter(),\r\n";
+                }
+            }elseif(in_array($column->data_type,['longtext','text'])){
+                $code .= "fake()->text(),\r\n";
+            }elseif(in_array($column->data_type,['tinytext','varchar'])){
+                $code .= "fake()->word(),\r\n";
+            }elseif($column->data_type === 'timestamp'){
+                $code .= "'',\r\n";
+            }else{
+                $code .= " ,\r\n";
+            }
+        }
+        $code .= "        ];\r\n";
+        $code .= self::factory_002_end();
         return $code;
     }
     public static function seeder($table, $columns){
@@ -319,7 +360,7 @@ class ".Util::firstUpper($table)." extends Model
     /******************************************************************
      * FACTORY
      */
-    private static function factory_001($table){
+    private static function factory_001_start($table){
         return "<?php
 /* Generated automatically using MigBuilder by Pangodream */
 
@@ -338,9 +379,11 @@ class ".Util::firstUpper($table)."Factory extends Factory
      */
     public function definition()
     {
-        return [
-            //
-        ];
+";
+    }
+
+    private static function factory_002_end(){
+        return "
     }
 }";
     }
