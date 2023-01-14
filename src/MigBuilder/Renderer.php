@@ -36,7 +36,7 @@ class Renderer
 
     private static array $fields = [];
 
-    public static function migration($table, $columns, $constraints, $timestamps = true): string
+    public static function migration(string $table, array $columns, array $constraints, bool $timestamps = true): string
     {
         self::$fields = [];
         $code = "";
@@ -75,7 +75,7 @@ class Renderer
         return $code;
     }
 
-    public static function model($table, $columns, $constraints, $children, $timestamps): string
+    public static function model(string $table, array $columns, array $constraints, array $children, bool $timestamps): string
     {
         $code = self::model_001_class_start($table);
 
@@ -139,7 +139,7 @@ class Renderer
         return $code;
     }
 
-    public static function factory($table, $columns, $constraints): string
+    public static function factory(string $table, array $columns, array $constraints): string
     {
         $code = self::factory_001_start($table);
         $code .= "        // Record sample structure\r\n";
@@ -186,7 +186,7 @@ class Renderer
         return $code;
     }
 
-    public static function seeder($table, $columns): string
+    public static function seeder(string $table, array $columns): string
     {
         $code = self::seeder_001_start($table);
         $code .= "    // Record sample structure\r\n";
@@ -208,7 +208,7 @@ class Renderer
     /***********************************************************************************
      *                                  UTILITIES
      **********************************************************************************/
-    private static function columnCode($column): array
+    private static function columnCode(\stdClass $column): array
     {
         $precision = null;
         $scale = null;
@@ -298,7 +298,7 @@ class Renderer
     /******************************************************************
      * MIGRATION
      */
-    private static function migration_001_class_start($table): string
+    private static function migration_001_class_start(string $table): string
     {
         return "
 <?php
@@ -313,7 +313,7 @@ class Create" . Util::firstUpper($table) . "Table extends Migration
         ";
     }
 
-    private static function migration_002_up_start($table): string
+    private static function migration_002_up_start(string $table): string
     {
         return "
     /**
@@ -327,21 +327,21 @@ class Create" . Util::firstUpper($table) . "Table extends Migration
 ";
     }
 
-    private static function migration_003_up_create_end($table): string
+    private static function migration_003_up_create_end(string $table): string
     {
         return "        });
 
 ";
     }
 
-    private static function migration_003_up_end($table): string
+    private static function migration_003_up_end(string $table): string
     {
         return "
     }
 ";
     }
 
-    private static function migration_004_down($table): string
+    private static function migration_004_down(string $table): string
     {
         return "
     /**
@@ -368,7 +368,7 @@ class Create" . Util::firstUpper($table) . "Table extends Migration
     /******************************************************************
      * MODEL
      */
-    private static function model_001_class_start($table): string
+    private static function model_001_class_start(string $table): string
     {
         return "<?php
 /* Generated automatically using MigBuilder by Pangodream */
@@ -396,7 +396,7 @@ class " . Util::firstUpper($table) . " extends Model
     /******************************************************************
      * FACTORY
      */
-    private static function factory_001_start($table): string
+    private static function factory_001_start(string $table): string
     {
         return "<?php
 /* Generated automatically using MigBuilder by Pangodream */
@@ -429,7 +429,7 @@ class " . Util::firstUpper($table) . "Factory extends Factory
     /******************************************************************
      * SEEDER
      */
-    private static function seeder_001_start($table): string
+    private static function seeder_001_start(string $table): string
     {
         return "<?php
 /* Generated automatically using MigBuilder by Pangodream */
@@ -461,7 +461,7 @@ class " . Util::firstUpper($table) . "Seeder extends Seeder
     /*********************************************************************
      * MODEL Relationship
      */
-    private static function modelRelationship($modelName, $relationship, $foreignKey = ''): string
+    private static function modelRelationship(string $modelName, string $relationship, string $foreignKey = ''): string
     {
         $methodName = $modelName;
         if (in_array($modelName, self::$fields, true) === true) {

@@ -42,7 +42,7 @@ class Explorer
         return $this->sortedTables;
     }
 
-    public function listColumns($table)
+    public function listColumns(string $table): array
     {
         $cols = [];
         if (!isset($this->tables[$table])) {
@@ -75,7 +75,7 @@ class Explorer
         return $cols;
     }
 
-    public function listConstraints($table)
+    public function listConstraints(string $table): array
     {
         $cons = [];
         if (!isset($this->tables[$table])) {
@@ -157,7 +157,7 @@ class Explorer
         $this->sortedTables = $sorted;
     }
 
-    private function select($sql, $params = []): array
+    private function select(string $sql, array $params = []): array
     {
         return $this->cdb->select($sql, $params);
     }

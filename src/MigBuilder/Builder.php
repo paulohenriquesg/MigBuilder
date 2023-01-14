@@ -16,7 +16,7 @@ class Builder
         $this->command = $command;
     }
 
-    public function buildDatabase($timestamps = true, $overwrite = false): void
+    public function buildDatabase(bool $timestamps = true, bool $overwrite = false): void
     {
         $tables = $this->explorer->listSortedTables();
         $index = 0;
@@ -29,7 +29,7 @@ class Builder
         }
     }
 
-    private function buildAll($table, $index, $timestamps = true, $overwrite = false): void
+    private function buildAll(string $table, int $index, bool $timestamps = true, bool $overwrite = false): void
     {
         $modelFile = app_path() . '/Models/' . $this->modelFileName($table);
         $factoryFile = database_path() . '/factories/' . $this->factoryFileName($table);
@@ -56,7 +56,7 @@ class Builder
         $this->buildMigration($table, $index, $timestamps);
     }
 
-    private function buildModel($table, $timestamps): void
+    private function buildModel(string $table, bool $timestamps): void
     {
         $columns = $this->explorer->listColumns($table);
         $constraints = $this->explorer->listConstraints($table);
@@ -71,7 +71,7 @@ class Builder
         file_put_contents(app_path() . '/Models/' . $this->modelFileName($table), $code);
     }
 
-    private function buildFactory($table): void
+    private function buildFactory(string $table): void
     {
         $columns = $this->explorer->listColumns($table);
         $constraints = $this->explorer->listConstraints($table);
@@ -79,14 +79,14 @@ class Builder
         file_put_contents(database_path() . '/factories/' . $this->factoryFileName($table), $code);
     }
 
-    private function buildSeeder($table): void
+    private function buildSeeder(string $table): void
     {
         $columns = $this->explorer->listColumns($table);
         $code = Renderer::seeder($table, $columns);
         file_put_contents(database_path() . '/seeders/' . $this->seederFileName($table), $code);
     }
 
-    private function buildMigration($table, $index, $timestamps = true): void
+    private function buildMigration(string $table, int $index, bool $timestamps = true): void
     {
         $columns = $this->explorer->listColumns($table);
         $constraints = $this->explorer->listConstraints($table);
@@ -94,22 +94,22 @@ class Builder
         file_put_contents(database_path() . '/migrations/' . $this->migrationFileName($table, $index), $code);
     }
 
-    private function modelFileName($table): string
+    private function modelFileName(string $table): string
     {
         return Util::firstUpper($table) . ".php";
     }
 
-    private function factoryFileName($table): string
+    private function factoryFileName(string $table): string
     {
         return Util::firstUpper($table) . "Factory.php";
     }
 
-    private function seederFileName($table): string
+    private function seederFileName(string $table): string
     {
         return Util::firstUpper($table) . "Seeder.php";
     }
 
-    private function migrationFileName($table, $index = null): string
+    private function migrationFileName(string $table, ?int $index = null): string
     {
         if ($index === null) {
             $idx = date("His");
@@ -120,7 +120,7 @@ class Builder
         return $date . $idx . "_create_" . strtolower($table) . "_table.php";
     }
 
-    private function getExistingMigrationFileName($table)
+    private function getExistingMigrationFileName(string $table)
     {
         $pattern = "_create_" . strtolower($table) . "_table.php";
         $filename = false;
